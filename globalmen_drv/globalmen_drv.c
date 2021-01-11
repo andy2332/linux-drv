@@ -18,11 +18,11 @@ module_param(globalmem_major,int,S_IRUGO);
 
 struct globalmem_dev {
 	struct cdev cdev;
-	unsigned char mem[GLOBALMEN_SIZE];
+	unsigned char mem[GLOBALMEM_SIZE];
 };
 
 
-struct globalmem_major *globalmem_devp;
+struct globalmem_dev *globalmem_devp;
 
 static int globalmem_open(struct inode *inode, struct file *filp)
 {
@@ -40,7 +40,7 @@ static long globalmem_ioctl(struct file *filp, unsigned int cmd, unsigned long a
 	struct globalmem_dev *dev = filp->private_data;
 	switch (cmd)
 		{
-			case MEM_CLEAR:
+			case MEN_CLEAR:
 				memset(dev->mem,0,GLOBALMEM_SIZE);
 				printk(KERN_INFO"globalmem is set to zero\n");
 				break;
@@ -142,21 +142,21 @@ static loff_t    globalmem_llseek(struct file *filp, loff_t offset, int orig)
 
 
 static const struct file_operations globalmem_fops = {
-	.onwer = THIS_MODULE,
+	.owner = THIS_MODULE,
 	.llseek = globalmem_llseek,
 	.read = globalmem_read,
 	.write = globalmem_write,
-	.unlocked_ioctl = globalmem_iocl,
-	.opne = globalmem_open,
+	.unlocked_ioctl = globalmem_ioctl,
+	.open = globalmem_open,
 	.release = globalmem_release,
 };
 
 /*初始化*/
-static void globalmem_setuo_cdev(struct globalmem_dev *dev,int index)
+static void globalmem_setup_cdev(struct globalmem_dev *dev,int index)
 {
 	int err,devno = MKDEV(globalmem_major,index);
 
-	cdev_init(&dev->cdev, &globalmem_fops)
+	cdev_init(&dev->cdev, &globalmem_fops);
 	dev->cdev.owner = THIS_MODULE;
 	err = cdev_add(&dev->cdev , devno, 1);
 	if(err)
@@ -169,7 +169,7 @@ static int __init globalmem_init(void)
 	printk(KERN_INFO "globalmem word enter \n");
 	dev_t devno = MKDEV(globalmem_major,0);
 	if(globalmem_major)
-		ret = alloc_chrdev_region(&devno,1,"globalmem");
+		ret = register_chrdev_region(devno,1,"globalmem");
 	else
 	{
 		ret = alloc_chrdev_region(&devno,0,1,"globalmem");
@@ -177,24 +177,24 @@ static int __init globalmem_init(void)
 	}
 	if(ret < 0)
 		return ret;
-	globalmem_devp = kzalloc(sizeof(struct globalmen_dev),GFP_KERNEL);
-	if(!globalmen_devp)
+	globalmem_devp = kzalloc(sizeof(struct globalmem_dev),GFP_KERNEL);
+	if(!globalmem_devp)
 	{
 		ret = -ENOMEM;
-		goto fiail_malloc;
+		goto fail_malloc;
 	}
-	globalmem_setuo_cdev(globalmem_devp,0);
+	globalmem_setup_cdev(globalmem_devp,0);
 	return 0;
 	fail_malloc:
-		unregister_chrdev(globalmen_devp,0);
+		unregister_chrdev_region(globalmem_devp,0);
 	return ret;
 }
-module_init(globamen_init);
+module_init(globalmem_init);
 static void __exit globamem_exit(void)
 {
 	printk(KERN_INFO "globalmem word exit\n");
 }
-module_exit(hglo_exit);
+module_exit(globamem_exit);
 
 MODULE_AUTHOR("Barry Song<>");
 MODULE_LICENSE("GPL v2");
