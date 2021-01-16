@@ -1,3 +1,4 @@
+
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/of.h>
@@ -14,6 +15,55 @@ static struct class *sys_class = NULL;
 static struct device *class_device = NULL;
 
 static volatile unsigned int *gpio_data;
+
+int led_open (struct inode *pinode , struct file *pfile)
+{
+	printdk(KERN_INFO " [%s]\n" ,__func__);
+
+	return 0;
+}
+
+
+ssize_t led_read(struct file *pfile, char __user *userbuf , size_t size, loff_t *loff)
+{
+	printdk(KERN_INFO " [%s]\n", __func__);
+
+	return 0;
+}
+
+
+ssize_t led_write(struct file *pfile, const char __user *userbuf, size_t size, loff_t *loff)
+{
+	int ret = -1;
+	int val = -1;
+	printdk(KERN_INFO " [%s]\n" ,__func__);
+
+	ret = copy_from_user(&val,userbuf, size);
+	
+	if(ret == 0 && val == 1)
+	{
+		printk("led_on : [%s] 1\n",__func__);
+		//开灯
+	}
+	else
+	{
+		printk("led_off : [%s] 0\n",__func__);
+		//关灯
+	}
+
+	return size;
+
+}
+
+
+
+static struct file_operations led_fops = {
+	.owner = THIS_MODULE,
+	.open  = led_open,
+	.write = led_write,
+	.read  = led_read,
+
+};
 
 int led_probe(struct platform_device *pdev)
 {
