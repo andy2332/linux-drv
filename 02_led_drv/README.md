@@ -2,10 +2,12 @@
 
 **硬件操作**
 初始化硬件：
+
      CCM_CCGR1                               = ioremap(0x20C406C, 4);
      IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = ioremap(0x2290014,4);
      GPIO5_GDIR                              = ioremap(0x020AC000 + 0x4,4);
      GPIO5_DR                                = ioremap(0x020AC000+0, 4);
+
 参考imx6ull 的 datasheet 
 	参考如下图:
 	《截图待补充》
