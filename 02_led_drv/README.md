@@ -32,3 +32,10 @@
 ####5.参考原理图
 ![avatar](https://github.com/andy2332/linux-drv/blob/main/02_led_drv/GPIO5_3.png)
 
+####6.操作
+
+	开灯：
+	/led_drv_test  -w 1
+	关灯：
+	/led_drv_test  -w 0
+

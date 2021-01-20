@@ -91,18 +91,18 @@ static int __init hello_init(void)
 	unsigned int val;
 	
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-	major = register_chrdev(0, "hello", &hello_drv);  /* /dev/hello */
+	major = register_chrdev(0, "andy_led", &hello_drv);  /* /dev/andy_led */
 
 
 	hello_class = class_create(THIS_MODULE, "hello_class");
 	err = PTR_ERR(hello_class);
 	if (IS_ERR(hello_class)) {
 		printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-		unregister_chrdev(major, "hello");
+		unregister_chrdev(major, "andy_led");
 		return -1;
 	}
 	
-	device_create(hello_class, NULL, MKDEV(major, 0), NULL, "hello"); /* /dev/hello */
+	device_create(hello_class, NULL, MKDEV(major, 0), NULL, "andy_led"); /* /dev/andy_led */
 
 	//初始化硬件资源
 	CCM_CCGR1 								= ioremap(0x20C406C, 4);
@@ -134,7 +134,7 @@ static void __exit hello_exit(void)
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	device_destroy(hello_class, MKDEV(major, 0));
 	class_destroy(hello_class);
-	unregister_chrdev(major, "hello");
+	unregister_chrdev(major, "andy_led");
 }
 
 

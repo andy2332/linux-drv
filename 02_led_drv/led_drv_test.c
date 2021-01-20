@@ -25,7 +25,7 @@ int main(int argc, char **argv)
 	}
 
 	/* 2. 打开文件 */
-	fd = open("/dev/hello", O_RDWR);
+	fd = open("/dev/andy_led", O_RDWR);
 	if (fd == -1)
 	{
 		printf("can not open file /dev/hello\n");
