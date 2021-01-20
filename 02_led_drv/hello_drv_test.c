@@ -46,9 +46,6 @@ int main(int argc, char **argv)
 		printf("APP read : %s\n", buf);
 	}
 
-	sleep(5);
-
-
 	close(fd);
 	
 	return 0;

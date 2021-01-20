@@ -24,16 +24,12 @@ static volatile unsigned int *GPIO5_GDIR								;
 static volatile unsigned int *GPIO5_DR									;
 
 
-
-
-
-
 /* 1. 确定主设备号                                                                 */
 static int major = 0;
 static char kernel_buf[1024];
 static struct class *hello_class;
 
-
+//开灯
 
 #define MIN(a, b) (a < b ? a : b)
 
@@ -51,12 +47,21 @@ static ssize_t hello_drv_write (struct file *file, const char __user *buf, size_
 	int err;
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	err = copy_from_user(kernel_buf, buf, MIN(1024, size));
+
+	if(kernel_buf[0] == '1')
+	{
+		*GPIO5_DR &= ~(1<<3);	
+	}
+	else
+	{
+		*GPIO5_DR |= (1<<3);
+	}
+
 	return MIN(1024, size);
 }
 
 static int hello_drv_open (struct inode *node, struct file *file)
 {
-	*GPIO5_DR &= ~(1<<3);
 
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	return 0;
@@ -64,7 +69,6 @@ static int hello_drv_open (struct inode *node, struct file *file)
 
 static int hello_drv_close (struct inode *node, struct file *file)
 {
-	*GPIO5_DR |= (1<<3);
 
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	return 0;
