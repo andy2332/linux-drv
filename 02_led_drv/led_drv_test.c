@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 	fd = open("/dev/andy_led", O_RDWR);
 	if (fd == -1)
 	{
-		printf("can not open file /dev/hello\n");
+		printf("can not open file /dev/andy_led\n");
 		return -1;
 	}
 
