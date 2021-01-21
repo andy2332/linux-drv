@@ -115,7 +115,7 @@ static int __init led_init(void)
 	*CCM_CCGR1 |= (3<<30);
 
 
-	//设置GPIO5_3为GPIO输出
+	//设置GPIO5_3为GPIO模式
 	val = *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3;
 	val &= ~(0xf);
 	val |=(5);
