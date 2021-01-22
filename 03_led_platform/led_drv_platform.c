@@ -18,7 +18,7 @@
 
 //硬件资源
 
-static volatile unsigned int *CCM_CCGR1									;		
+static volatile unsigned int *CCM_CCGR									;		
 static volatile unsigned int *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3	;
 static volatile unsigned int *GPIO5_GDIR								;
 static volatile unsigned int *GPIO5_DR									;
@@ -83,28 +83,83 @@ static struct file_operations led_drv = {
 	.write   = led_drv_write,
 	.release = led_drv_close,
 };
-	
+
 //获取平台资源
 static int led_drv_probe(struct platform_device *pdev)
 {
+	int err;
+	unsigned int val;
 	struct resource *addr_res;
 	addr_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	printk("driver addr 0x%x/n",addr_res->start);
 	//已经映射到本地资源
-	GPIO5_GDIR = ioremap(addr_res->start,resource_size(addr_res));
-	/*与基础版设置方法相同
-		将GPIO5_3使能
-		将GPIO5_3设置为GPIO（通用输入输出）
-		将GPIO5_3设置为输出模式
-	*/
-	return 0;
+	CCM_CCGR = ioremap(addr_res->start,resource_size(addr_res));
 	
+	addr_res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+	printk("driver addr 0x%x/n",addr_res->start);
+	//已经映射到本地资源
+	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = ioremap(addr_res->start,resource_size(addr_res));
+	
+	addr_res = platform_get_resource(pdev, IORESOURCE_MEM, 2);
+	printk("driver addr 0x%x/n",addr_res->start);
+	//已经映射到本地资源
+	GPIO5_GDIR = ioremap(addr_res->start,resource_size(addr_res));	
+
+	addr_res = platform_get_resource(pdev, IORESOURCE_MEM, 3);
+	printk("driver addr 0x%x/n",addr_res->start);
+	//已经映射到本地资源
+	GPIO5_DR = ioremap(addr_res->start,resource_size(addr_res));
+
+	/*与基础版设置方法相同
+	  将GPIO5_3使能
+	  将GPIO5_3设置为GPIO（通用输入输出）
+	  将GPIO5_3设置为输出模式
+	  */
+
+#if 1
+
+	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	major = register_chrdev(0, "andy_led", &led_drv);  /* /dev/andy_led */
+
+
+	led_class = class_create(THIS_MODULE, "led_class");
+	err = PTR_ERR(led_class);
+	if (IS_ERR(led_class)) {
+		printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+		unregister_chrdev(major, "andy_led");
+		return -1;
+	}
+
+	device_create(led_class, NULL, MKDEV(major, 0), NULL, "andy_led"); /* /dev/andy_led */
+
+
+
+	//使能GPIO5_3
+	*CCM_CCGR |= (3<<30);
+
+
+	//设置GPIO5_3为GPIO输出
+	val = *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3;
+	val &= ~(0xf);
+	val |=(5);
+	*IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = val;
+
+	//将GPIO5_3设置为output输出
+	*GPIO5_GDIR |= (1<<3);
+
+
+	return 0;
+#endif
+
 }
 
 static int led_drv_remove(struct platform_device *pdev)
 {
 	iounmap(GPIO5_GDIR);
-	printk("<kernel> call %s()\n",__FUNCTION__);
+	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	device_destroy(led_class, MKDEV(major, 0));
+	class_destroy(led_class);
+	unregister_chrdev(major, "andy_led");
 	return 0;
 }
 
@@ -128,48 +183,6 @@ static int __init led_init(void)
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	return platform_driver_register(&drv);
 
-#if 0
-	int err;
-	unsigned int val;
-	
-	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-	major = register_chrdev(0, "andy_led", &led_drv);  /* /dev/andy_led */
-
-
-	led_class = class_create(THIS_MODULE, "led_class");
-	err = PTR_ERR(led_class);
-	if (IS_ERR(led_class)) {
-		printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-		unregister_chrdev(major, "andy_led");
-		return -1;
-	}
-	
-	device_create(led_class, NULL, MKDEV(major, 0), NULL, "andy_led"); /* /dev/andy_led */
-
-	//初始化硬件资源
-	CCM_CCGR1 								= ioremap(0x20C406C, 4);
-	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = ioremap(0x2290014,4);
-	GPIO5_GDIR								= ioremap(0x020AC000 + 0x4,4);
-	GPIO5_DR 								= ioremap(0x020AC000+0, 4);
-
-
-	//使能GPIO5_3
-	*CCM_CCGR1 |= (3<<30);
-
-
-	//设置GPIO5_3为GPIO输出
-	val = *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3;
-	val &= ~(0xf);
-	val |=(5);
-	*IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = val;
-
-	//将GPIO5_3设置为output输出
-	*GPIO5_GDIR |= (1<<3);
-	
-	
-	return 0;
-#endif
-
 }
 
 /* 6. 有入口函数就应该有出口函数：卸载驱动程序时，就会去调用这个出口函数           */
@@ -178,12 +191,6 @@ static void __exit led_exit(void)
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 
-	/*
-	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-	device_destroy(led_class, MKDEV(major, 0));
-	class_destroy(led_class);
-	unregister_chrdev(major, "andy_led");
-	*/
 }
 
 
