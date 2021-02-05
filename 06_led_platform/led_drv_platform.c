@@ -16,8 +16,14 @@
 #include <linux/io.h>
 #include <linux/platform_device.h>//平台设备头文件
 
+
+#define MIN(a, b) (a < b ? a : b)
+
+
 static int major = 0;
 static struct class *led_class;
+struct resource *res[4];
+static char kernel_buf[1024];
 
 
 /* 3. 实现对应的open/read/write等函数，填入file_operations结构体                   */
@@ -28,13 +34,28 @@ static ssize_t led_drv_read (struct file *file, char __user *buf, size_t size, l
 
 static ssize_t led_drv_write (struct file *file, const char __user *buf, size_t size, loff_t *offset)
 {
-	return 0;
+	int err;
+	 printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	 err = copy_from_user(kernel_buf, buf, MIN(1024, size));
+	 printk(KERN_INFO " %c\n",kernel_buf[0]);
+	
+	 if(kernel_buf[0] == '1')
+	 {	 
+		  (res[2]->start) &= ~(1<<3);	 
+	 }	 
+	 else
+	 {	 
+		  (res[2]->start) |= (1<<3);
+	 }	 
+	
+	 return MIN(1024, size);
 }
 
 static int led_drv_open (struct inode *node, struct file *file)
 {
 
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	
 	return 0;
 }
 
@@ -57,13 +78,12 @@ static struct file_operations led_drv = {
 
 static int led_register(void)
 {
-	int err;
-	
+	int err;	
 	printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	major = register_chrdev(0, "andy_led", &led_drv);  /* /dev/andy_led */
-
-
+	
 	led_class = class_create(THIS_MODULE, "led_class");
+	
 	err = PTR_ERR(led_class);
 	if (IS_ERR(led_class)) {
 		printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
@@ -72,26 +92,53 @@ static int led_register(void)
 	}
 	device_create(led_class, NULL, MKDEV(major, 0), NULL, "andy_led"); /* /dev/andy_led */
 	return 0;
+
 	
 }
 
 //获取平台资源
 static int led_drv_probe(struct platform_device *pdev)
 {
+	int val ;
 
-	struct resource *res;
 	led_register();
-
-	res = platform_get_resource(pdev,IORESOURCE_MEM, 0);
-	
+	//获取硬件资源
+	res[0] = platform_get_resource(pdev,IORESOURCE_MEM, 0);
+	res[1] = platform_get_resource(pdev,IORESOURCE_MEM, 1);
+	res[2] = platform_get_resource(pdev,IORESOURCE_MEM, 2);
+	res[3] = platform_get_resource(pdev,IORESOURCE_MEM, 3);
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-	printk(KERN_INFO "%d \n",res->start);
+	printk(KERN_INFO "%x \n",res[0]->start);
+	printk(KERN_INFO "%x \n",res[1]->start);
+	printk(KERN_INFO "%x \n",res[2]->start);
+	printk(KERN_INFO "%x \n",res[3]->start);
+	
+	//对硬件资源进行操作
+	
+	//初始化硬件资源
+	
+	
+	 //使能GPIO5_3
+	 (res[0]->start) |= (3<<30);
+	
+	 //设置GPIO5_3为GPIO模式
+	 val = (res[1]->start);
+	 val &= ~(0xf);
+	 val |=(5);
+	 (res[1]->start) = val;
+	
+	 //将GPIO5_3设置为output输出
+	 (res[2]->start) |= (1<<3);
+	
 	return 0;
 }
 
 static int led_drv_remove(struct platform_device *pdev)
 {
+	
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+	//device_destroy(struct class * class, dev_t devt)(led_class, dev_t devt);
+	
 	return 0;
 }
 
