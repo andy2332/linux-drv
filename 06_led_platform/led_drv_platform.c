@@ -24,6 +24,11 @@ static int major = 0;
 static struct class *led_class;
 struct resource *res[4];
 static char kernel_buf[1024];
+static volatile unsigned int *CCM_CCGR1									;		
+static volatile unsigned int *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3	;
+static volatile unsigned int *GPIO5_GDIR								;
+static volatile unsigned int *GPIO5_DR									;
+
 
 
 /* 3. 实现对应的open/read/write等函数，填入file_operations结构体                   */
@@ -38,15 +43,15 @@ static ssize_t led_drv_write (struct file *file, const char __user *buf, size_t 
 	 printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	 err = copy_from_user(kernel_buf, buf, MIN(1024, size));
 	 printk(KERN_INFO " %c\n",kernel_buf[0]);
-	
 	 if(kernel_buf[0] == '1')
-	 {	 
-		  (res[2]->start) &= ~(1<<3);	 
-	 }	 
+	 {
+		 *GPIO5_DR &= ~(1<<3);
+	 }
 	 else
-	 {	 
-		  (res[2]->start) |= (1<<3);
-	 }	 
+	 {
+		 *GPIO5_DR |= (1<<3);
+	 }
+	 
 	
 	 return MIN(1024, size);
 }
@@ -112,23 +117,31 @@ static int led_drv_probe(struct platform_device *pdev)
 	printk(KERN_INFO "%x \n",res[1]->start);
 	printk(KERN_INFO "%x \n",res[2]->start);
 	printk(KERN_INFO "%x \n",res[3]->start);
-	
+
 	//对硬件资源进行操作
+	CCM_CCGR1 								= 	ioremap(res[0]->start,resource_size(res[0]));
+	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 =	ioremap(res[1]->start,resource_size(res[1]));
+	GPIO5_DR 								=	ioremap(res[2]->start,resource_size(res[2]));
+	GPIO5_GDIR 								=	ioremap(res[3]->start,resource_size(res[3]));
+
+
+
+    //使能GPIO5_3
+    *CCM_CCGR1 |= (3<<30);
+
+
+
+    //设置GPIO5_3为GPIO模式
+    val = *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3;
+    val &= ~(0xf);
+    val |=(5);
+    *IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = val;
 	
-	//初始化硬件资源
-	
-	
-	 //使能GPIO5_3
-	 (res[0]->start) |= (3<<30);
-	
-	 //设置GPIO5_3为GPIO模式
-	 val = (res[1]->start);
-	 val &= ~(0xf);
-	 val |=(5);
-	 (res[1]->start) = val;
-	
-	 //将GPIO5_3设置为output输出
-	 (res[2]->start) |= (1<<3);
+
+    //将GPIO5_3设置为output输出
+    *GPIO5_GDIR |= (1<<3);
+
+
 	
 	return 0;
 }
