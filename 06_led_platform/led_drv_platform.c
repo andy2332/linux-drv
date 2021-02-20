@@ -113,41 +113,17 @@ static int led_drv_probe(struct platform_device *pdev)
 	res[2] = platform_get_resource(pdev,IORESOURCE_MEM, 2);
 	res[3] = platform_get_resource(pdev,IORESOURCE_MEM, 3);
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-	printk(KERN_INFO "%x ,%d\n",res[0]->start,resource_size(res[0]));
-	printk(KERN_INFO "%x ,%d\n",res[1]->start,resource_size(res[1]));
-	printk(KERN_INFO "%x ,%d\n",res[2]->start,resource_size(res[2]));
-	printk(KERN_INFO "%x ,%d\n",res[3]->start,resource_size(res[3]));
-
+	
 	//对硬件资源进行操作
 
 	CCM_CCGR1 								= 	ioremap(res[0]->start,resource_size(res[0]));
 	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 =	ioremap(res[1]->start,resource_size(res[1]));
 	GPIO5_GDIR  							=	ioremap(res[2]->start,resource_size(res[2]));
 	GPIO5_DR								=	ioremap(res[3]->start,resource_size(res[3]));
-	
-	/*
-
-	CCM_CCGR1 								= 	ioremap(0x20C406C,resource_size(res[0]));
-	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 =	ioremap(0x2290014,resource_size(res[1]));
-	GPIO5_GDIR  							=	ioremap(0x020AC000+0x4,resource_size(res[2]));
-	GPIO5_DR								=	ioremap(0x020AC000,resource_size(res[3]));
-	
-
-
-	CCM_CCGR1 								= ioremap(0x20C406C, 4);
-	IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3 = ioremap(0x2290014,4);
-	GPIO5_GDIR								= ioremap(0x020AC000 + 0x4,4);
-	GPIO5_DR 								= ioremap(0x020AC000+0, 4);
-*/
-
-	printk(KERN_INFO "biaozhi 1\n");
-
 
 
     //使能GPIO5_3
     (*CCM_CCGR1) |= (3<<30);
-
-	printk(KERN_INFO "biaozhi 2\n");
 
 
     //设置GPIO5_3为GPIO模式
@@ -155,14 +131,9 @@ static int led_drv_probe(struct platform_device *pdev)
     val &= ~(0xf);
     val |=(5);
     (*IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3) = val;
-	printk(KERN_INFO "biaozhi 3\n");
 
     //将GPIO5_3设置为output输出
     (*GPIO5_GDIR) |= (1<<3);
-
-	printk(KERN_INFO "biaozhi 4\n");
-
-	
 	return 0;
 }
 
@@ -171,6 +142,18 @@ static int led_drv_remove(struct platform_device *pdev)
 	
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 	//device_destroy(struct class * class, dev_t devt)(led_class, dev_t devt);
+
+
+	iounmap(CCM_CCGR1);
+	iounmap(IOMUXC_SNVS_SW_MUX_CTL_PAD_SNVS_TAMPER3);
+	iounmap(GPIO5_GDIR);
+	iounmap(GPIO5_DR);
+
+	
+	device_destroy(led_class, MKDEV(major, 0));
+	class_destroy(led_class);
+	unregister_chrdev(major, "andy_led");
+
 	
 	return 0;
 }
