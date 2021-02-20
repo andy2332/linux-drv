@@ -5,8 +5,8 @@
 
 #define LED_CCM_CCGR	0x20C406C
 #define LED_IOMUXC		0x2290014
-#define LED_GPIO5_GDIR	0x020AC0000 + 0x4
-#define LED_GPIO5_DR	0x020AC0000 + 0
+#define LED_GPIO5_GDIR	0x020AC000 + 0x4
+#define LED_GPIO5_DR	0x020AC000 + 0
 //硬件资源
 
 //static volatile unsigned int *CCM_CCGR1									;		
@@ -25,25 +25,25 @@ struct resource led_res[]=
 	[0] = 
 	{
 		.start	 = LED_CCM_CCGR,
-		.end	 = LED_CCM_CCGR + 0x4,
+		.end	 = LED_CCM_CCGR + 4-1,
 		.flags	 = IORESOURCE_MEM,
 	},
 	[1] = 
 	{
 		.start	= LED_IOMUXC,
-		.end	 = LED_IOMUXC + 0x4,
+		.end	 = LED_IOMUXC + 4-1,
 		.flags	= IORESOURCE_MEM,
 	},
 	[2] = 
 	{
 		.start  = LED_GPIO5_GDIR,
-		.end	 = LED_GPIO5_GDIR + 0x4,
+		.end	 = LED_GPIO5_GDIR + 4-1,
 		.flags  = IORESOURCE_MEM,
 	},
 	[3] = 
 	{
 		.start  = LED_GPIO5_DR,
-		.end	 = LED_GPIO5_DR + 0x4-1,
+		.end	 = LED_GPIO5_DR + 4-1,
 		.flags  = IORESOURCE_MEM,
 	},
 };

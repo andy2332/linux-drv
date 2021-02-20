@@ -1,1 +1,0 @@
-cmd_/home/zhao/my_work/work/linux-drv/06_led_platform/led_dev_platform.ko := arm-linux-gnueabihf-ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/zhao/my_work/work/linux-drv/06_led_platform/led_dev_platform.ko /home/zhao/my_work/work/linux-drv/06_led_platform/led_dev_platform.o /home/zhao/my_work/work/linux-drv/06_led_platform/led_dev_platform.mod.o ;  true
