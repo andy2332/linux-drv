@@ -65,7 +65,7 @@ static int led_drv_probe(struct platform_device *pdev)
 	//获得gpio的中断号
 	irq = gpio_to_irq(gpio_num);
 	//
-	request_irq(irq,test_key,IRQF_TRIGGER_RISING,"test_key",NULL);
+	err = request_irq(irq,test_key,IRQF_TRIGGER_RISING,"test_key",NULL);
 	//获取硬件资源
 	return 0;
 }
