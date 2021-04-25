@@ -74,7 +74,7 @@ static int led_drv_remove(struct platform_device *pdev)
 {
 	
 	printk(KERN_INFO "%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-
+	free_irq(irq,NULL);
 	return 0;
 }
 
