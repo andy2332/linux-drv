@@ -1,0 +1,4 @@
+使用tasklet 进行中断下半部
+更新设备树，加载驱动后 按下KEY1按键 打印：
+	test  key
+	test tasklet_irq
