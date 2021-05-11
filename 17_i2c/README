@@ -1,0 +1,3 @@
+使用
+	at24c02_test w 123
+	at24c02_test r
